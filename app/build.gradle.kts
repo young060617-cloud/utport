@@ -7,6 +7,16 @@ android {
     namespace = "com.example.utport"
     compileSdk = 34
 
+    // 고정 디버그 키: 빌드할 때마다 서명이 같아서 앱 위에 덮어설치(업데이트)가 가능하다
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.utport"
         minSdk = 24
