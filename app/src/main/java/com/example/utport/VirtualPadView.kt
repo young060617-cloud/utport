@@ -38,11 +38,11 @@ class VirtualPadView(context: Context) : View(context) {
     private val W = 2340f
     private val H = 1080f
 
-    private val buttons = listOf(
-        // 좌상단: 주사위 2개 + R
-        Btn(KeyEvent.KEYCODE_ESCAPE, 565 / W, 92 / H, 64 / H, Shape.DICE, icon = Icon.DICE),
+    private fun buildButtons(): List<Btn> = listOf(
+        // 좌상단: 주사위 2개 + R (주사위 키는 설정에서 변경 가능)
+        Btn(PadSettings.dice1(context), 565 / W, 92 / H, 64 / H, Shape.DICE, icon = Icon.DICE),
         Btn(KeyEvent.KEYCODE_R, 568 / W, 275 / H, 75 / H, Shape.CIRCLE, label = "R"),
-        Btn(KeyEvent.KEYCODE_F4, 723 / W, 275 / H, 64 / H, Shape.DICE, icon = Icon.DICE, teal = true),
+        Btn(PadSettings.dice2(context), 723 / W, 275 / H, 64 / H, Shape.DICE, icon = Icon.DICE, teal = true),
         // 좌하단: 좌/우
         Btn(KeyEvent.KEYCODE_DPAD_LEFT, 380 / W, 885 / H, 112 / H, Shape.CIRCLE, icon = Icon.LEFT),
         Btn(KeyEvent.KEYCODE_DPAD_RIGHT, 610 / W, 885 / H, 112 / H, Shape.CIRCLE, icon = Icon.RIGHT),
@@ -54,6 +54,19 @@ class VirtualPadView(context: Context) : View(context) {
         Btn(KeyEvent.KEYCODE_DPAD_UP, 2030 / W, 630 / H, 112 / H, Shape.CIRCLE, icon = Icon.UP),
         Btn(KeyEvent.KEYCODE_DPAD_DOWN, 2030 / W, 885 / H, 112 / H, Shape.CIRCLE, icon = Icon.DOWN),
     )
+
+    private var buttons: List<Btn> = buildButtons()
+    private var scale = 1f
+    private var haptic = true
+
+    /** 저장된 설정(투명도/크기/진동/주사위 키)을 다시 읽어 반영한다. */
+    fun reload() {
+        opacity = PadSettings.opacity(context)
+        scale = PadSettings.scale(context)
+        haptic = PadSettings.haptic(context)
+        buttons = buildButtons()
+        invalidate()
+    }
 
     private val faceColor = Color.parseColor("#343733")
     private val sideColor = Color.parseColor("#1E201D")
@@ -78,10 +91,12 @@ class VirtualPadView(context: Context) : View(context) {
     var opacity = 0.9f
         set(v) { field = v; invalidate() }
 
+    init { reload() }
+
     override fun onDraw(c: Canvas) {
         val w = width.toFloat(); val h = height.toFloat()
         for (b in buttons) {
-            val x = b.cx * w; val y = b.cy * h; val r = b.r * h
+            val x = b.cx * w; val y = b.cy * h; val r = b.r * h * scale
             val down = b.keyCode in pressed
             val dy = if (down) r * 0.08f else 0f
             val face = if (b.teal) tealFace else faceColor
@@ -150,7 +165,7 @@ class VirtualPadView(context: Context) : View(context) {
         for (k in pressed.toList()) if (k !in now) listener?.onKey(k, false)
         for (k in now) if (k !in pressed) {
             listener?.onKey(k, true)
-            performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            if (haptic) performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
         }
         pressed.clear(); pressed.addAll(now)
         invalidate()
@@ -162,7 +177,7 @@ class VirtualPadView(context: Context) : View(context) {
         var best: Btn? = null; var bestD = Float.MAX_VALUE
         for (b in buttons) {
             val d = hypot(px - b.cx * width, py - b.cy * height)
-            if (d <= b.r * height * 1.25f && d < bestD) { best = b; bestD = d }
+            if (d <= b.r * height * scale * 1.25f && d < bestD) { best = b; bestD = d }
         }
         return best?.keyCode
     }

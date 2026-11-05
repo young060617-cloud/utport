@@ -45,6 +45,10 @@ class MainActivity : ComponentActivity() {
             text = "ZIP / data.win 파일 가져오기"
             setOnClickListener { pickFile.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }
         })
+        root.addView(Button(this).apply {
+            text = "가상패드 테스트 / 설정"
+            setOnClickListener { startActivity(Intent(this@MainActivity, TestPadActivity::class.java)) }
+        })
         status = TextView(this).apply { setTextColor(Color.LTGRAY) }
         root.addView(status)
         list = ListView(this)
