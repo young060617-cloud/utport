@@ -12,7 +12,7 @@ import java.util.zip.ZipInputStream
  * 팬게임(GameMaker 윈도우 빌드)을 모바일용 구조로 변환해 앱 내부 저장소에 넣는다.
  *
  *  games/<이름>/assets/game.droid   <- data.win (이름만 변경)
- *  games/<이름>/assets/*.ogg 등      <- 같은 폴더의 사운드/외부 파일 (소문자, 평탄화)
+ *  games/<이름>/assets/ (ogg 등)    <- 같은 폴더의 사운드/외부 파일 (소문자, 평탄화)
  *
  * .exe/.dll 은 모바일에서 쓰지 않으므로 제외한다.
  */
