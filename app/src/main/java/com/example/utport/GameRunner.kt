@@ -25,7 +25,8 @@ object GameRunner {
             container.addView(TextView(activity).apply {
                 setTextColor(0xFFFFFFFF.toInt())
                 textSize = 16f
-                text = "게임 변환 완료: ${gameDir.name}\n\n" +
+                text = "게임 변환 완료: ${gameDir.name}\n" +
+                    (GameIdentity.summary(File(gameDir, "assets/game.droid")) ?: "") + "\n\n" +
                     "실행하려면 GameMaker 러너를 연결해야 합니다.\n" +
                     "(files/runner/ 에 러너 라이브러리를 넣고 GameRunner.attach 를 구현)"
                 gravity = android.view.Gravity.CENTER

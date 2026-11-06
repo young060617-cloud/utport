@@ -16,7 +16,10 @@ object GameIdentity {
      */
     private val ALLOWED = listOf("qk")
 
-    class Info(val fileName: String, val name: String, val displayName: String)
+    class Info(
+        val fileName: String, val name: String, val displayName: String,
+        val bytecode: Int, val major: Int, val minor: Int, val release: Int, val build: Int,
+    )
 
     /** GameMaker 형식이 아니거나 읽을 수 없으면 null */
     fun read(f: File): Info? = runCatching {
@@ -47,9 +50,20 @@ object GameIdentity {
                 fileName = str(ptr(4)),
                 name = str(ptr(40)),
                 displayName = str(ptr(100)),
+                bytecode = data[1].toInt() and 0xFF,
+                major = le32(data, 44), minor = le32(data, 48),
+                release = le32(data, 52), build = le32(data, 56),
             )
         }
     }.getOrNull()
+
+    /**
+     * 화면 표시용 요약. 데이터 파일 머리글의 값이라 대략적인 버전이다
+     * (GMS2 는 2.3 이후 버전도 2.0.0.0 으로 적혀 있는 경우가 많다).
+     */
+    fun summary(f: File): String? = read(f)?.let {
+        "GameMaker 헤더 ${it.major}.${it.minor}.${it.release}.${it.build} / 바이트코드 ${it.bytecode}"
+    }
 
     /** 식별 문자열 또는 가져온 폴더/파일 이름에 허용 키워드가 있으면 true */
     fun isAllowed(info: Info, sourceName: String): Boolean {
