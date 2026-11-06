@@ -32,7 +32,7 @@ object GameImporter {
         val out = freshDir(ctx, root.name ?: "game")
         val assets = File(out, "assets").apply { mkdirs() }
         copyTree(ctx, root, assets)
-        finish(out)
+        finish(out, root.name ?: "")
     }
 
     /** zip 또는 data.win 단일 파일 가져오기 */
@@ -45,18 +45,28 @@ object GameImporter {
             if (name.endsWith(".zip", true)) unzip(ins, assets)
             else copyStream(ins, File(assets, mapName(name)))
         }
-        finish(out)
+        finish(out, name)
     }
 
     fun delete(game: File) { game.deleteRecursively() }
 
     // ---- 내부 구현 ----
 
-    private fun finish(out: File): File {
-        val assets = File(out, "assets")
-        if (!File(assets, "game.droid").exists()) {
+    /** 변환 결과 검증: data.win 존재 -> GameMaker 형식 -> 허용된 게임(QK Dusttrust)인지 */
+    private fun finish(out: File, sourceName: String): File {
+        val game = File(out, "assets/game.droid")
+        if (!game.exists()) {
             out.deleteRecursively()
             error("data.win 을 찾지 못했습니다. 게임 폴더(또는 zip)를 선택하세요.")
+        }
+        val info = GameIdentity.read(game)
+        if (info == null) {
+            out.deleteRecursively()
+            error("GameMaker 게임(data.win)이 아닙니다. 이 앱은 GameMaker 로 만든 QK Dusttrust 만 지원해요.")
+        }
+        if (!GameIdentity.isAllowed(info, sourceName)) {
+            out.deleteRecursively()
+            error("QK Dusttrust 만 지원합니다.\n[선택: $sourceName / 내부 이름: ${info.name} / 표시 이름: ${info.displayName}]")
         }
         return out
     }

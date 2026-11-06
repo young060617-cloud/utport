@@ -12,6 +12,10 @@ PC용 GameMaker 팬게임(data.win)을 가져와 모바일용 구조로 변환�
 - 변환 규칙: `data.win → game.droid`, 파일명 소문자·평탄화, `.exe/.dll` 제외
 - 목록에서 탭하면 실행, 길게 누르면 삭제
 
+## 지원 게임
+- GameMaker(data.win)로 만든 **QK Dusttrust** 만 가져올 수 있습니다. 다른 게임은 가져오기 단계에서 거절됩니다.
+- 허용 키워드는 `GameIdentity.kt` 의 `ALLOWED` 에서 바꿀 수 있습니다.
+
 ## 가상패드 (VirtualPadView.kt)
 | 위치 | 버튼 | 키 |
 |---|---|---|
