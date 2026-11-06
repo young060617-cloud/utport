@@ -62,7 +62,44 @@ object GameIdentity {
      * (GMS2 는 2.3 이후 버전도 2.0.0.0 으로 적혀 있는 경우가 많다).
      */
     fun summary(f: File): String? = read(f)?.let {
-        "GameMaker 헤더 ${it.major}.${it.minor}.${it.release}.${it.build} / 바이트코드 ${it.bytecode}"
+        val chunks = chunkNames(f)
+        val notable = NOTABLE.filter { n -> n in chunks }
+        "GameMaker 헤더 ${it.major}.${it.minor}.${it.release}.${it.build} / 바이트코드 ${it.bytecode}\n" +
+            "추정 버전: ${minVersion(chunks)} (구성: ${if (notable.isEmpty()) "없음" else notable.joinToString(" ")})"
+    }
+
+    // 버전을 가르는 청크 (libgm 의 version_detection 기준)
+    private val NOTABLE = listOf("TGIN", "SEQN", "FEDS", "FEAT", "PSEM", "UILR")
+
+    /** 파일 안의 청크 이름 목록. 이름 4글자와 크기 4바이트를 읽고 크기만큼 건너뛴다. */
+    fun chunkNames(f: File): List<String> = runCatching {
+        RandomAccessFile(f, "r").use { r ->
+            val len = r.length()
+            val names = ArrayList<String>()
+            val h = ByteArray(8)
+            var pos = 8L
+            while (pos + 8 <= len && names.size < 64) {
+                r.seek(pos); r.readFully(h)
+                val n = String(h, 0, 4, Charsets.US_ASCII)
+                if (!n.all { c -> c in 'A'..'Z' || c in '0'..'9' }) break
+                names.add(n)
+                pos += 8 + (le32(h, 4).toLong() and 0xFFFFFFFFL)
+            }
+            names
+        }
+    }.getOrDefault(emptyList())
+
+    /**
+     * 청크가 있으면 그 버전 이상이라는 뜻이다. 새 기능을 안 쓴 게임은 실제보다 낮게 나올 수 있다.
+     */
+    fun minVersion(chunks: List<String>): String = when {
+        "UILR" in chunks -> "2024.13 이상"
+        "PSEM" in chunks -> "2023.2 이상"
+        "FEAT" in chunks -> "2022.8 이상"
+        "FEDS" in chunks -> "2.3.6 이상"
+        "SEQN" in chunks -> "2.3.0 이상"
+        "TGIN" in chunks -> "2.2.1 이상"
+        else -> "2.2.1 미만(2.0~2.2 계열)"
     }
 
     /** 식별 문자열 또는 가져온 폴더/파일 이름에 허용 키워드가 있으면 true */
